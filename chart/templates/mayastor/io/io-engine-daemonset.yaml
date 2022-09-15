@@ -73,13 +73,13 @@ spec:
         # For example -l 1,2,10-20 means use core 1, 2, 10 to 20.
         # Note: Ensure that the CPU resources are updated accordingly.
         #       If you use 2 CPUs, the CPU: field should also read 2.
-        - "-g$(MY_POD_IP)"
+          - "-g$(MY_POD_IP):10124"
         - "-N$(MY_NODE_NAME)"
         - "-Rhttps://{{ .Release.Name }}-agent-core:50051"
         - "-y/var/local/io-engine/config.yaml"
         - "-l{{ include "cpuFlag" . }}"
         - "-p={{ .Release.Name }}-etcd:{{ .Values.etcd.service.port }}"
-        - "--api-versions=v0"
+        - "--api-versions=v0,v1"
         command:
         - io-engine
         securityContext:
