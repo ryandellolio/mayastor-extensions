@@ -22,6 +22,8 @@ spec:
         {{- include "base_init_core_containers" . }}
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations: {{- toYaml .Values.earlyEvictionTolerations | nindent 8}}
+      priorityClassName: {{ .Release.Name }}-priority-class
       {{- end }}
       tolerations: {{- toYaml .Values.earlyEvictionTolerations | nindent 8}}
       priorityClassName: {{ .Release.Name }}-priority-class
