@@ -4,6 +4,7 @@ use prometheus::{
     core::{Collector, Desc},
     GaugeVec, Opts,
 };
+use tracing::error;
 
 use crate::{cache::Cache, client::pool::Pool};
 
@@ -65,8 +66,8 @@ impl Collector for PoolsCollector {
     fn collect(&self) -> Vec<prometheus::proto::MetricFamily> {
         let mut c = match Cache::get_cache().lock() {
             Ok(c) => c,
-            Err(err) => {
-                println!("Error while getting cache resource:{}", err);
+            Err(error) => {
+                error!(error=%error,"Error while getting cache resource");
                 return Vec::new();
             }
         };
@@ -74,8 +75,8 @@ impl Collector for PoolsCollector {
         let mut metric_family = Vec::with_capacity(3 * cp.data_mut().pools().pools.capacity());
         let node_name = match get_node_name() {
             Ok(name) => name,
-            Err(_) => {
-                println!("Unable to get node name");
+            Err(error) => {
+                error!(error=%error, "Unable to get node name");
                 return metric_family;
             }
         };
@@ -88,8 +89,8 @@ impl Collector for PoolsCollector {
                 .get_metric_with_label_values(&[node_name.clone().as_str(), p.name().as_str()])
             {
                 Ok(pool_total_size) => pool_total_size,
-                Err(_) => {
-                    println!("Error while creating metrics(pool_total_size) with label values:");
+                Err(error) => {
+                    error!(error=%error,"Error while creating metrics(pool_total_size) with label values:");
                     return metric_family;
                 }
             };
@@ -102,8 +103,8 @@ impl Collector for PoolsCollector {
                 .get_metric_with_label_values(&[node_name.clone().as_str(), p.name().as_str()])
             {
                 Ok(pool_used_size) => pool_used_size,
-                Err(_) => {
-                    println!("Error while creating metrics(pool_used_size) with label values:");
+                Err(error) => {
+                    error!(error=%error,"Error while creating metrics(pool_used_size) with label values:");
                     return metric_family;
                 }
             };
@@ -116,8 +117,8 @@ impl Collector for PoolsCollector {
                 .get_metric_with_label_values(&[node_name.clone().as_str(), p.name().as_str()])
             {
                 Ok(pool_status) => pool_status,
-                Err(_) => {
-                    println!("Error while creating metrics(pool_status) with label values:");
+                Err(error) => {
+                    error!(error=%error,"Error while creating metrics(pool_status) with label values:");
                     return metric_family;
                 }
             };

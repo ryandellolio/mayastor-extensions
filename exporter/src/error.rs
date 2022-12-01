@@ -11,4 +11,5 @@ pub enum ExporterError {
     InvalidURI(String),
     DeserializationError(String),
     PodIPError(String),
+    GrpcClientError(String),
 }

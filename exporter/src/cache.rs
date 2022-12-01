@@ -3,10 +3,10 @@ use std::{ops::DerefMut, sync::Mutex};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
+use tracing::{debug, error};
 
 use crate::{
     client::{
-        grpc_client,
         grpc_client::GrpcClient,
         pool::{PoolOperations, Pools},
     },
@@ -76,24 +76,26 @@ impl Cache {
 /// To store pools related data in cache
 pub async fn store_pool_data(client: GrpcClient) {
     loop {
-        let pools = grpc_client::GrpcClient::list_pools(client.clone()).await;
+        let pools = client.list_pools().await;
         {
-            let mut c = match Cache::get_cache().lock() {
-                Ok(c) => c,
-                Err(err) => {
-                    println!("Error while getting cache resource:{}", err);
+            let mut cache = match Cache::get_cache().lock() {
+                Ok(cache) => cache,
+                Err(error) => {
+                    error!(error=%error, "Error while getting cache resource");
                     continue;
                 }
             };
-            let cp = c.deref_mut();
+            let pools_cache = cache.deref_mut();
             match pools {
                 // set pools in the cache
-                Ok(p) => {
-                    cp.data_mut().set_pools(p);
+                Ok(pools) => {
+                    debug!("Updated pool cache with latest metrics");
+                    pools_cache.data_mut().set_pools(pools);
                 }
                 // invalidate cache in case of error
-                Err(_) => {
-                    cp.data_mut().invalidate_pools();
+                Err(error) => {
+                    error!(error=?error, "Error getting pools data, invalidating pools cache");
+                    pools_cache.data_mut().invalidate_pools();
                 }
             };
         }

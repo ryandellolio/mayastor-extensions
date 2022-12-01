@@ -1,6 +1,5 @@
 use std::{net::SocketAddr, time::Duration};
 
-use clap::ArgMatches;
 use once_cell::sync::OnceCell;
 
 static CONFIG: OnceCell<ExporterConfig> = OnceCell::new();
@@ -16,24 +15,10 @@ pub struct ExporterConfig {
 
 impl ExporterConfig {
     /// Initialize exporter configs
-    pub fn initialize(args: &ArgMatches) {
-        let metrics_endpoint = args
-            .value_of("metrics-endpoint")
-            .expect("metrics listen address must be specified to enable exporter");
-
-        let addr: SocketAddr = format!("0.0.0.0:{}", metrics_endpoint)
-            .parse()
-            .expect("Error while parsing address");
-
-        let polling_time = args
-            .value_of("polling-time")
-            .expect("Polling time for gRPC calls to get data")
-            .parse::<humantime::Duration>()
-            .expect("Invalid polling time value");
-
+    pub fn initialize(addr: SocketAddr, polling_time: Duration) {
         CONFIG.get_or_init(|| Self {
             metrics_endpoint: addr,
-            polling_time: polling_time.into(),
+            polling_time,
         });
     }
 

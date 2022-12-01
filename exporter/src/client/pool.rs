@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
-use crate::{client::grpc_client::GrpcClient, error::ExporterError};
+use crate::{
+    client::{grpc_client::GrpcClient, ApiVersion},
+    error::ExporterError,
+};
 
 /// Pool resource
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -48,42 +52,51 @@ pub struct Pools {
 /// Pool operations i.e wrapper over rpc calls to get pools data
 #[tonic::async_trait]
 pub trait PoolOperations: Send + Sync + Sized {
-    async fn list_pools(client: GrpcClient) -> Result<Pools, ExporterError>;
+    async fn list_pools(&self) -> Result<Pools, ExporterError>;
 }
 
 #[tonic::async_trait]
 impl PoolOperations for GrpcClient {
     // wrapper over list_pools rpc call
-    async fn list_pools(mut client: GrpcClient) -> Result<Pools, ExporterError> {
-        let response = match client
-            .clients_mut()
-            .mayastor_client_mut()
-            .list_pools(rpc::mayastor::Null {})
-            .await
-        {
-            Ok(response) => response,
-            Err(error) => return Err(ExporterError::GrpcResponseError(error.to_string())),
+    async fn list_pools(&self) -> Result<Pools, ExporterError> {
+        let response = match self.api_version() {
+            ApiVersion::V0 => match self.client_v0()?.list_pools(rpc::io_engine::Null {}).await {
+                Ok(response) => serde_json::to_string_pretty(&response.into_inner()),
+                Err(error) => return Err(ExporterError::GrpcResponseError(error.to_string())),
+            },
+            ApiVersion::V1 => match self
+                .client_v1()?
+                .pool
+                .list_pools(rpc::v1::pool::ListPoolOptions {
+                    name: None,
+                    pooltype: None,
+                })
+                .await
+            {
+                Ok(response) => serde_json::to_string_pretty(&response.into_inner()),
+                Err(error) => return Err(ExporterError::GrpcResponseError(error.to_string())),
+            },
         };
 
-        let x = match serde_json::to_string_pretty(&response.get_ref()) {
-            Ok(x) => x,
-            Err(err) => {
-                println!("Error while deserializing response: {}", err);
+        let json_string = match response {
+            Ok(json_string) => json_string,
+            Err(error) => {
+                error!(error=%error, "Error while deserializing response");
                 return Err(ExporterError::DeserializationError(
                     "Error while deserializing response to string".to_string(),
                 ));
             }
         };
 
-        let p: Pools = match serde_json::from_str(&*x) {
-            Ok(p) => p,
-            Err(err) => {
-                println!("Error while deserializing string to Pools resource{}", err);
+        let pools: Pools = match serde_json::from_str(json_string.as_str()) {
+            Ok(pools) => pools,
+            Err(error) => {
+                error!(error=%error, "Error while deserializing string to Pools resource");
                 return Err(ExporterError::DeserializationError(
                     "Error while deserializing string data to Pools resource".to_string(),
                 ));
             }
         };
-        Ok(p)
+        Ok(pools)
     }
 }
