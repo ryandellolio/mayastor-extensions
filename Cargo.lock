@@ -576,33 +576,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common-lib"
-version = "1.0.0"
-dependencies = [
- "async-trait",
- "chrono",
- "dyn-clonable",
- "etcd-client",
- "k8s-openapi",
- "kube",
- "openapi",
- "parking_lot",
- "percent-encoding",
- "rand",
- "serde",
- "serde_json",
- "serde_tuple",
- "snafu",
- "strum",
- "strum_macros",
- "tokio",
- "tonic",
- "tracing",
- "url",
- "uuid",
-]
-
-[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1957,7 +1930,6 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 name = "openapi"
 version = "1.0.0"
 dependencies = [
- "actix-web",
  "async-trait",
  "dyn-clonable",
  "futures",
@@ -2276,6 +2248,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ac9a59f73473f1b8d852421e59e64809f025994837ef743615c6d0c5b305160"
 
 [[package]]
+name = "platform"
+version = "0.1.0"
+dependencies = [
+ "k8s-openapi",
+ "kube",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2413,6 +2395,28 @@ name = "protobuf"
 version = "2.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "106dd99e98437432fed6519dedecfade6a06a73bb7b2a1e019fdd2bee5778d94"
+
+[[package]]
+name = "pstor"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "dyn-clonable",
+ "etcd-client",
+ "parking_lot",
+ "platform",
+ "rand",
+ "serde",
+ "serde_json",
+ "snafu",
+ "strum",
+ "strum_macros",
+ "tokio",
+ "tonic",
+ "tracing",
+ "url",
+ "uuid",
+]
 
 [[package]]
 name = "quote"
@@ -2865,27 +2869,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_tuple"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4f025b91216f15a2a32aa39669329a475733590a015835d1783549a56d09427"
-dependencies = [
- "serde",
- "serde_tuple_macros",
-]
-
-[[package]]
-name = "serde_tuple_macros"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4076151d1a2b688e25aaf236997933c66e18b870d0369f8b248b8ab2be630d7e"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "serde_urlencoded"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3114,7 +3097,6 @@ dependencies = [
  "async-trait",
  "chrono",
  "clap",
- "common-lib",
  "downcast-rs",
  "flate2",
  "futures",
@@ -3128,7 +3110,9 @@ dependencies = [
  "lazy_static",
  "once_cell",
  "openapi",
+ "platform",
  "prettytable-rs",
+ "pstor",
  "schemars",
  "serde",
  "serde_json",
